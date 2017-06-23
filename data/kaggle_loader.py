@@ -6,15 +6,16 @@ from data.data_loader import DataLoader
 class KaggleLoader(DataLoader):
     _name = 'KaggleLoader'
     _TSV_DELIM = '\t'
+    __DATA_COLUMN = 'review'
 
-    def __init__(self, file_names, num_threads=DataLoader._num_threads, batch_size=DataLoader._batch_size,
-                 min_after_dequeue=DataLoader._min_after_dequeue, capacity=DataLoader._capacity, name=_name):
+    def __init__(self, bucket_boundaries, *args, **kwargs):
         record_defaults = [["0"], [0], [""]]
         field_delim = KaggleLoader._TSV_DELIM
         skip_header_lines = 1
+        data_column = KaggleLoader.__DATA_COLUMN
 
-        super().__init__(file_names, record_defaults, field_delim, skip_header_lines, num_threads, batch_size,
-                         min_after_dequeue, capacity, name)
+        super().__init__(record_defaults, field_delim, data_column, bucket_boundaries, *args,
+                         skip_header_lines=skip_header_lines, **kwargs)
 
         self.source, self.target = self.get_data()
 
@@ -34,5 +35,4 @@ class KaggleLoader(DataLoader):
         return example, label
 
     def _preprocess_example(self, example):
-
         return example

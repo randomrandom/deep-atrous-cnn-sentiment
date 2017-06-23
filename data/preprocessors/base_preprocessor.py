@@ -5,7 +5,7 @@ from abc import abstractclassmethod
 
 
 class BasePreprocessor(object):
-    _CLEAN_PREFIX = 'clean_'
+    CLEAN_PREFIX = 'clean_'
     _METADATA_PREFIX = 'metadata_'
     _PAD_TOKEN = '<PAD>'
     _UNK_TOKEN = '<UNK>'
@@ -54,7 +54,7 @@ class BasePreprocessor(object):
     def save_preprocessed_file(self):
         assert self.new_data is not None, 'No preprocessing has been applied, did you call apply_preprocessing?'
 
-        self.new_data.to_csv(self.path + self._CLEAN_PREFIX + self.filename, sep=self.separator, index=False)
+        self.new_data.to_csv(self.path + self.CLEAN_PREFIX + self.filename, sep=self.separator, index=False)
         print('Successfully saved preprocessed file')
 
     def apply_preprocessing(self, column_name):

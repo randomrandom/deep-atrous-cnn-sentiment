@@ -1,5 +1,9 @@
+import ntpath
 import sugartensor as tf
 from abc import abstractclassmethod
+from pathlib import Path
+
+from data.preprocessors.kaggle_preprocessor import KagglePreprocessor
 
 __author__ = 'george.val.stoyan0v@gmail.com'
 
@@ -13,13 +17,16 @@ class DataLoader(object):
     _min_after_dequeue = _batch_size * _num_threads
     _capacity = 10  # _min_after_dequeue + (_num_threads + 16) * _batch_size  # as recommended in tf tutorial
 
-    def __init__(self, file_names, record_defaults, field_delim, skip_header_lines=_DEFAULT_SKIP_HEADER_LINES,
+    def __init__(self, record_defaults, field_delim, data_column, bucket_boundaries, file_names,
+                 skip_header_lines=_DEFAULT_SKIP_HEADER_LINES,
                  num_threads=_num_threads, batch_size=_batch_size, min_after_dequeue=_min_after_dequeue,
                  capacity=_capacity, name=_name):
         self.__file_names = file_names
         self.__field_delim = field_delim
         self.__record_defaults = record_defaults
         self.__skip_header_lines = skip_header_lines
+        self.__data_column = data_column
+        self.__bucket_boundaries = bucket_boundaries
 
         self.num_threads = num_threads
         self._batch_size = batch_size
@@ -28,15 +35,49 @@ class DataLoader(object):
         self._name = name
 
         self.shuffle_queue = tf.RandomShuffleQueue(capacity=self._capacity, min_after_dequeue=self._min_after_dequeue,
-                                              dtypes=[tf.string, tf.int32], shapes=None)
+                                                   dtypes=[tf.string, tf.int32], shapes=None)
 
     def get_data(self):
         return self.__load_batch(self.__file_names, record_defaults=self.__record_defaults,
-                                 field_delim=self.__field_delim, skip_header_lines=self.__skip_header_lines,
+                                 field_delim=self.__field_delim, data_column=self.__data_column,
+                                 bucket_boundaries=self.__bucket_boundaries, skip_header_lines=self.__skip_header_lines,
                                  num_epochs=None, shuffle=True)
 
-    def __load_batch(self, file_names, record_defaults, field_delim=_CSV_DELIM, skip_header_lines=0,
+    @staticmethod
+    def __generate_preprocessed_files(file_names, data_column, bucket_boundaries, field_delim=_CSV_DELIM):
+        new_file_names = []
+        for filename in file_names:
+            file_path, tail = ntpath.split(filename)
+            file_path += '/'
+
+            file_name = KagglePreprocessor.CLEAN_PREFIX + tail
+            file = Path(file_path + file_name)
+            new_file_names.append(file_path + file_name)
+
+            print(file)
+            if file.exists():
+                try:
+                    tf.os.remove(file_name)
+                except OSError:
+                    print("File not found %s" % file_name)
+
+            DataLoader.__preprocess_file(file_path, file_name, field_delim, data_column, bucket_boundaries)
+
+        return new_file_names
+
+    @staticmethod
+    def __preprocess_file(path, file_name, field_delim, data_column, bucket_boundaries):
+        preprocessor = KagglePreprocessor(path, file_name, field_delim)
+        preprocessor.apply_preprocessing(data_column)
+        preprocessor.save_preprocessed_file()
+
+    def __load_batch(self, file_names, record_defaults, data_column, bucket_boundaries, field_delim=_CSV_DELIM,
+                     skip_header_lines=0,
                      num_epochs=None, shuffle=True):
+
+        file_names = DataLoader.__generate_preprocessed_files(file_names, data_column, bucket_boundaries,
+                                                              field_delim=field_delim)
+
         filename_queue = tf.train.string_input_producer(
             file_names, num_epochs=num_epochs, shuffle=shuffle
         )
@@ -67,7 +108,7 @@ class DataLoader(object):
         _, (padded_examples, label_examples) = tf.contrib.training.bucket_by_sequence_length(lengths,
                                                                                              [dense_example, label],
                                                                                              batch_size=self._batch_size,
-                                                                                             bucket_boundaries=[3],
+                                                                                             bucket_boundaries=bucket_boundaries,
                                                                                              dynamic_pad=True,
                                                                                              capacity=self._capacity,
                                                                                              num_threads=self._num_threads)
