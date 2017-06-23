@@ -7,6 +7,7 @@ from abc import abstractclassmethod
 class BasePreprocessor(object):
     CLEAN_PREFIX = 'clean_'
     _METADATA_PREFIX = 'metadata_'
+    VOCABULARY_PREFIX = 'vocabulary_'
     _PAD_TOKEN = '<PAD>'
     _UNK_TOKEN = '<UNK>'
     _EOS_TOKEN = '<EOS>'
@@ -31,10 +32,10 @@ class BasePreprocessor(object):
         self.data = self._read_file(path, filename, separator)
         self.new_data = None
 
-    def _build_dictionary(self, data):
+    def _build_dictionary(self, data, column_name):
         all_text = []
 
-        for review in data.review:
+        for review in data[column_name]:
             all_text.extend(review.split())
 
         all_words = [(self.pad_token, -1), (self.unk_token, -1), (self.eos_token, -1)]
@@ -44,12 +45,15 @@ class BasePreprocessor(object):
             if word[0] not in self._dictionary:
                 self._dictionary[word[0]] = len(self._dictionary)
 
-        metadata = pd.DataFrame(data=all_words, columns=['Word', 'Frequency'])
+        word_column = 'Word'
+        metadata = pd.DataFrame(data=all_words, columns=[word_column, 'Frequency'])
         self.vocabulary_size = len(self._dictionary)
 
         print('Built vocabulary with size: %d' % self.vocabulary_size)
         metadata.to_csv(self.path + self._METADATA_PREFIX + self.filename, sep=self.separator, index=False)
         print('Saved vocabulary to metadata file')
+        metadata[word_column].to_csv(self.path + self.VOCABULARY_PREFIX + self.filename, sep=self.separator, index=False)
+        print('Saved vocabulary to vocabulary file')
 
     def save_preprocessed_file(self):
         assert self.new_data is not None, 'No preprocessing has been applied, did you call apply_preprocessing?'
@@ -62,7 +66,7 @@ class BasePreprocessor(object):
 
         new_data = self.data.copy()
         new_data[column_name] = new_data[column_name].apply(lambda x: self._preprocess(x))
-        self._build_dictionary(new_data)
+        self._build_dictionary(new_data, column_name)
 
         self.new_data = new_data
         print('Applied preprocessing to input data')

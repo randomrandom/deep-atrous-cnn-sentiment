@@ -8,8 +8,9 @@ x, y = data.source, data.target
 hello = tf.constant('The End!')
 
 with tf.Session() as sess:
+    table_initializer = tf.tables_initializer()
     initializer = tf.group(tf.local_variables_initializer(), tf.global_variables_initializer())
-    sess.run(initializer)
+    sess.run([table_initializer, initializer])
     coord = tf.train.Coordinator()
     qr = tf.train.QueueRunner(data.shuffle_queue, [data.enqueue_op] * data.num_threads)
     enqueue_threads = qr.create_threads(sess, coord=coord, start=True)

@@ -35,7 +35,7 @@ class DataLoader(object):
         self._name = name
 
         self.shuffle_queue = tf.RandomShuffleQueue(capacity=self._capacity, min_after_dequeue=self._min_after_dequeue,
-                                                   dtypes=[tf.string, tf.int32], shapes=None)
+                                                   dtypes=[tf.int64, tf.int32], shapes=None)
 
     def get_data(self):
         return self.__load_batch(self.__file_names, record_defaults=self.__record_defaults,
@@ -44,11 +44,17 @@ class DataLoader(object):
                                  num_epochs=None, shuffle=True)
 
     @staticmethod
+    def _split_file_to_path_and_name(file_name):
+        file_path, tail = ntpath.split(file_name)
+        file_path += '/'
+
+        return file_path, tail
+
+    @staticmethod
     def __generate_preprocessed_files(file_names, data_column, bucket_boundaries, field_delim=_CSV_DELIM):
         new_file_names = []
         for filename in file_names:
-            file_path, tail = ntpath.split(filename)
-            file_path += '/'
+            file_path, tail = DataLoader._split_file_to_path_and_name(filename)
 
             file_name = KagglePreprocessor.CLEAN_PREFIX + tail
             file = Path(file_path + file_name)
@@ -84,6 +90,13 @@ class DataLoader(object):
 
         example, label = self._read_file(filename_queue, record_defaults, field_delim, skip_header_lines)
 
+        voca_path, voca_name = DataLoader._split_file_to_path_and_name(
+            file_names[0])  # TODO: will be breka with multiple filenames
+        voca_name = KagglePreprocessor.VOCABULARY_PREFIX + voca_name
+
+        # load look up table that maps words to ids
+        table = tf.contrib.lookup.index_table_from_file(vocabulary_file=voca_path + voca_name, num_oov_buckets=0)
+
         # convert to tensor of strings
         split_example = tf.string_split([example], " ")
 
@@ -95,6 +108,7 @@ class DataLoader(object):
 
         # convert sparse to dense
         dense_example = tf.sparse_tensor_to_dense(split_example, default_value="")
+        dense_example = table.lookup(dense_example)
 
         # get the enqueue op to pass to a coordintor to be run
         self.enqueue_op = self.shuffle_queue.enqueue([dense_example, label])
