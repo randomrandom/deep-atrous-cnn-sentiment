@@ -1,4 +1,5 @@
 
 .idea/
-data/*.csv
-data/*.tsv
+data/kaggle_popcorn_challenge/*.csv
+data/kaggle_popcorn_challenge/*.tsv
+/data/sst1/
