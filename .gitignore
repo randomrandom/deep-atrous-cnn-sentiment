@@ -1,5 +1,14 @@
 
 .idea/
-data/kaggle_popcorn_challenge/*.csv
-data/kaggle_popcorn_challenge/*.tsv
-/data/sst1/
+data/datasets/kaggle_popcorn_challenge/*.csv
+data/datasets/kaggle_popcorn_challenge/*.tsv
+/data/datasets/sst1/
+*.ipynb_checkpoints
+*.ipynb
+__pycache__
+data/__pycache__/
+data/datasets/__pycache__/
+data/datasets/kaggle_popcorn_challenge/.ipynb_checkpoints/
+data/datasets/kaggle_popcorn_challenge/__pycache__/
+data/datasets/kaggle_popcorn_challenge/explore_kaggle_data.ipynb
+data/preprocessors/__pycache__/

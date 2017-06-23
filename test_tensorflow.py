@@ -1,7 +1,8 @@
 import sugartensor as tf
-from kaggle_loader import KaggleLoader
 
-data = KaggleLoader(['data/kaggle_popcorn_challenge/test.tsv'])
+from data.kaggle_loader import KaggleLoader
+
+data = KaggleLoader(['data/datasets/kaggle_popcorn_challenge/test.tsv'])
 x, y = data.source, data.target
 
 hello = tf.constant('The End!')
