@@ -5,12 +5,11 @@ from model.trainer import classifier_train
 from data.kaggle_loader import KaggleLoader
 
 BUCKETS = [100, 200, 300, 400, 500]
-TRAIN_DATA_FILES = ['data/datasets/kaggle_popcorn_challenge/labeledTrainData.tsv']
-TEST_DATA_FILES = ['data/datasets/kaggle_popcorn_challenge/testData.tsv']
+DATA_FILE = ['data/datasets/kaggle_popcorn_challenge/labeledTrainData.tsv']
 NUM_LABELS = 2
 
-data = KaggleLoader(BUCKETS, 15000, TRAIN_DATA_FILES)
-validation = KaggleLoader(BUCKETS, 10000, TEST_DATA_FILES)
+data = KaggleLoader(BUCKETS, 20000, DATA_FILE) # TODO: determine dataset size dynamically
+validation = KaggleLoader(BUCKETS, 5000, DATA_FILE, used_for_test_data=True)
 
 x, y = data.source, data.target
 val_x, val_y = validation.source, validation.target
@@ -28,16 +27,16 @@ with tf.sg_context(name='model'):
     # cross entropy loss with logit
     loss = train_classifier.sg_ce(target=y)
 
-# with tf.sg_context(name='model', reuse=True):
-#     test_classifier = classifier(v_x, NUM_LABELS, validation.vocabulary_size)
-#
-#     # accuracy evaluation (validation set)
-#     acc = (test_classifier.sg_softmax()
-#                     .sg_accuracy(target=val_y,name='val'))
-#
-#     # validation loss
-#     val_loss = (test_classifier.sg_ce(target=val_y))
+with tf.sg_context(name='model', reuse=True):
+    test_classifier = classifier(v_x, NUM_LABELS, validation.vocabulary_size)
+
+    # accuracy evaluation (validation set)
+    acc = (test_classifier.sg_softmax()
+                    .sg_accuracy(target=val_y,name='val'))
+
+    # validation loss
+    val_loss = (test_classifier.sg_ce(target=val_y))
 
 # train
-classifier_train(sess=sess, log_interval=50, lr=2e-1, loss=loss, #eval_metric=[acc, val_loss],
+classifier_train(sess=sess, log_interval=50, lr=2e-1, loss=loss, eval_metric=[acc, val_loss],
         ep_size=data.num_batches, max_ep=150, early_stop=False, data=data)

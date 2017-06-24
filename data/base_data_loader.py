@@ -8,7 +8,7 @@ from data.preprocessors.kaggle_preprocessor import KagglePreprocessor
 __author__ = 'george.val.stoyan0v@gmail.com'
 
 
-class DataLoader(object):
+class BaseDataLoader(object):
     _CSV_DELIM = ","
     _DEFAULT_SKIP_HEADER_LINES = 0
     _name = "data_loader"
@@ -20,7 +20,7 @@ class DataLoader(object):
     def __init__(self, record_defaults, field_delim, data_column, bucket_boundaries, file_names,
                  skip_header_lines=_DEFAULT_SKIP_HEADER_LINES,
                  num_threads=_num_threads, batch_size=_batch_size, min_after_dequeue=_min_after_dequeue,
-                 capacity=_capacity, name=_name):
+                 capacity=_capacity, used_for_test_data=False, name=_name):
         self.__file_names = file_names
         self.__field_delim = field_delim
         self.__record_defaults = record_defaults
@@ -29,8 +29,10 @@ class DataLoader(object):
         self.__bucket_boundaries = bucket_boundaries
 
         self.num_threads = num_threads
-        self._batch_size = batch_size
+
+        self._used_for_test_data = used_for_test_data
         self._min_after_dequeue = min_after_dequeue
+        self._batch_size = batch_size
         self._capacity = capacity
         self._name = name
 
@@ -55,9 +57,10 @@ class DataLoader(object):
     def __generate_preprocessed_files(self, file_names, data_column, bucket_boundaries, field_delim=_CSV_DELIM):
         new_file_names = []
         for filename in file_names:
-            file_path, tail = DataLoader._split_file_to_path_and_name(filename)
+            file_path, tail = BaseDataLoader._split_file_to_path_and_name(filename)
 
-            file_name = KagglePreprocessor.CLEAN_PREFIX + tail
+            prefix = KagglePreprocessor.TEST_PREFIX if self._used_for_test_data else KagglePreprocessor.CLEAN_PREFIX
+            file_name =  prefix + tail
             file = Path(file_path + file_name)
             new_file_names.append(file_path + file_name)
 
@@ -82,6 +85,7 @@ class DataLoader(object):
                      skip_header_lines=0,
                      num_epochs=None, shuffle=True):
 
+        original_file_names = file_names[:]
         file_names = self.__generate_preprocessed_files(file_names, data_column, bucket_boundaries,
                                                               field_delim=field_delim)
 
@@ -91,8 +95,8 @@ class DataLoader(object):
 
         example, label = self._read_file(filename_queue, record_defaults, field_delim, skip_header_lines)
 
-        voca_path, voca_name = DataLoader._split_file_to_path_and_name(
-            file_names[0])  # TODO: will be breka with multiple filenames
+        voca_path, voca_name = BaseDataLoader._split_file_to_path_and_name(
+            original_file_names[0])  # TODO: will be break with multiple filenames
         voca_name = KagglePreprocessor.VOCABULARY_PREFIX + voca_name
 
         # load look up table that maps words to ids
