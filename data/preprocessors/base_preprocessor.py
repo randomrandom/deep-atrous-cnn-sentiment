@@ -59,10 +59,12 @@ class BasePreprocessor(object):
         self.vocabulary_size = len(self._dictionary)
 
         print('Built vocabulary with size: %d' % self.vocabulary_size)
-        metadata.to_csv(self.path + self._METADATA_PREFIX + self.filename, sep=self.separator, index=False)
+
+        metadata.to_csv(self.path + self._METADATA_PREFIX + self.filename, sep=self.separator, index=False,
+                        encoding='utf-8')
         print('Saved vocabulary to metadata file')
         metadata[word_column].to_csv(self.path + self.VOCABULARY_PREFIX + self.filename, sep=self.separator,
-                                     index=False)
+                                     index=False, encoding='utf-8')
         print('Saved vocabulary to vocabulary file')
 
     def save_preprocessed_file(self):
@@ -71,8 +73,10 @@ class BasePreprocessor(object):
         data_size = self.new_data.shape[0]
         train_size = (int)(data_size * (1 - self.test_split))
 
-        self.new_data.iloc[:train_size,:].to_csv(self.path + self.CLEAN_PREFIX + self.filename, sep=self.separator, index=False)
-        self.new_data.iloc[train_size:,:].to_csv(self.path + self.TEST_PREFIX + self.filename, sep=self.separator, index=False)
+        self.new_data.iloc[:train_size, :].to_csv(self.path + self.CLEAN_PREFIX + self.filename, sep=self.separator,
+                                                  index=False)
+        self.new_data.iloc[train_size:, :].to_csv(self.path + self.TEST_PREFIX + self.filename, sep=self.separator,
+                                                  index=False)
         print('Successfully saved preprocessed files')
 
     def apply_preprocessing(self, column_name):

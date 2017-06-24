@@ -12,10 +12,10 @@ class BaseDataLoader(object):
     _CSV_DELIM = ","
     _DEFAULT_SKIP_HEADER_LINES = 0
     _name = "data_loader"
-    _num_threads = 1
-    _batch_size = 4
-    _min_after_dequeue = 8#_batch_size * _num_threads
-    _capacity = 100#_min_after_dequeue + (_num_threads + 16) * _batch_size  # as recommended in tf tutorial
+    _num_threads = 1 # 32
+    _batch_size = 4  # 64
+    _min_after_dequeue = 8 #_batch_size * _num_threads
+    _capacity = 100# #_min_after_dequeue + (_num_threads + 2) * _batch_size  # as recommended in tf tutorial
 
     def __init__(self, record_defaults, field_delim, data_column, bucket_boundaries, file_names,
                  skip_header_lines=_DEFAULT_SKIP_HEADER_LINES,
