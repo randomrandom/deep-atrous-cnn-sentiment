@@ -1,0 +1,1 @@
+tensorboard --logdir asset/train --port=6006

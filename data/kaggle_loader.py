@@ -7,8 +7,9 @@ class KaggleLoader(DataLoader):
     _name = 'KaggleLoader'
     _TSV_DELIM = '\t'
     __DATA_COLUMN = 'review'
+    __DATA_SIZE = 25000
 
-    def __init__(self, bucket_boundaries, *args, **kwargs):
+    def __init__(self, bucket_boundaries, data_size, *args, **kwargs):
         record_defaults = [["0"], [0], [""]]
         field_delim = KaggleLoader._TSV_DELIM
         skip_header_lines = 1
@@ -18,6 +19,7 @@ class KaggleLoader(DataLoader):
                          skip_header_lines=skip_header_lines, **kwargs)
 
         self.source, self.target = self.get_data()
+        self.num_batches = data_size // self._batch_size
 
     def _read_file(self, filename_queue, record_defaults, field_delim=DataLoader._CSV_DELIM,
                    skip_header_lines=DataLoader._DEFAULT_SKIP_HEADER_LINES):

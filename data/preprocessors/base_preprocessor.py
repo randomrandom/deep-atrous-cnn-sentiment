@@ -11,8 +11,9 @@ class BasePreprocessor(object):
     _PAD_TOKEN = '<PAD>'
     _UNK_TOKEN = '<UNK>'
     _EOS_TOKEN = '<EOS>'
+    UNK_TOKEN_ID = 1
 
-    _VOCABULARY_SIZE = 20000
+    _VOCABULARY_SIZE = 2000
 
     def __init__(self, path, filename, separator, vocabulary_size=_VOCABULARY_SIZE, pad_token=_PAD_TOKEN,
                  unk_token=_UNK_TOKEN, eos_token=_EOS_TOKEN):
@@ -39,6 +40,10 @@ class BasePreprocessor(object):
             all_text.extend(review.split())
 
         all_words = [(self.pad_token, -1), (self.unk_token, -1), (self.eos_token, -1)]
+
+        assert all_words[BasePreprocessor.UNK_TOKEN_ID][0] == \
+               self.unk_token, '<UNK> token id and actual position should match'
+
         all_words.extend(collections.Counter(all_text).most_common(self.vocabulary_size - 3))
 
         for word in all_words:
@@ -52,7 +57,8 @@ class BasePreprocessor(object):
         print('Built vocabulary with size: %d' % self.vocabulary_size)
         metadata.to_csv(self.path + self._METADATA_PREFIX + self.filename, sep=self.separator, index=False)
         print('Saved vocabulary to metadata file')
-        metadata[word_column].to_csv(self.path + self.VOCABULARY_PREFIX + self.filename, sep=self.separator, index=False)
+        metadata[word_column].to_csv(self.path + self.VOCABULARY_PREFIX + self.filename, sep=self.separator,
+                                     index=False)
         print('Saved vocabulary to vocabulary file')
 
     def save_preprocessed_file(self):

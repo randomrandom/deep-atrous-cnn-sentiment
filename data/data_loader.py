@@ -12,10 +12,10 @@ class DataLoader(object):
     _CSV_DELIM = ","
     _DEFAULT_SKIP_HEADER_LINES = 0
     _name = "data_loader"
-    _num_threads = 1  # 32
-    _batch_size = 3  # 64
-    _min_after_dequeue = _batch_size * _num_threads
-    _capacity = 10  # _min_after_dequeue + (_num_threads + 16) * _batch_size  # as recommended in tf tutorial
+    _num_threads = 1
+    _batch_size = 4
+    _min_after_dequeue = 8#_batch_size * _num_threads
+    _capacity = 100#_min_after_dequeue + (_num_threads + 16) * _batch_size  # as recommended in tf tutorial
 
     def __init__(self, record_defaults, field_delim, data_column, bucket_boundaries, file_names,
                  skip_header_lines=_DEFAULT_SKIP_HEADER_LINES,
@@ -34,6 +34,8 @@ class DataLoader(object):
         self._capacity = capacity
         self._name = name
 
+        self.vocabulary_size = 0
+
         self.shuffle_queue = tf.RandomShuffleQueue(capacity=self._capacity, min_after_dequeue=self._min_after_dequeue,
                                                    dtypes=[tf.int64, tf.int32], shapes=None)
 
@@ -50,8 +52,7 @@ class DataLoader(object):
 
         return file_path, tail
 
-    @staticmethod
-    def __generate_preprocessed_files(file_names, data_column, bucket_boundaries, field_delim=_CSV_DELIM):
+    def __generate_preprocessed_files(self, file_names, data_column, bucket_boundaries, field_delim=_CSV_DELIM):
         new_file_names = []
         for filename in file_names:
             file_path, tail = DataLoader._split_file_to_path_and_name(filename)
@@ -67,21 +68,21 @@ class DataLoader(object):
                 except OSError:
                     print("File not found %s" % file_name)
 
-            DataLoader.__preprocess_file(file_path, file_name, field_delim, data_column, bucket_boundaries)
+            self.__preprocess_file(file_path, file_name, field_delim, data_column, bucket_boundaries)
 
         return new_file_names
 
-    @staticmethod
-    def __preprocess_file(path, file_name, field_delim, data_column, bucket_boundaries):
+    def __preprocess_file(self, path, file_name, field_delim, data_column, bucket_boundaries):
         preprocessor = KagglePreprocessor(path, file_name, field_delim)
         preprocessor.apply_preprocessing(data_column)
         preprocessor.save_preprocessed_file()
+        self.vocabulary_size = preprocessor.vocabulary_size
 
     def __load_batch(self, file_names, record_defaults, data_column, bucket_boundaries, field_delim=_CSV_DELIM,
                      skip_header_lines=0,
                      num_epochs=None, shuffle=True):
 
-        file_names = DataLoader.__generate_preprocessed_files(file_names, data_column, bucket_boundaries,
+        file_names = self.__generate_preprocessed_files(file_names, data_column, bucket_boundaries,
                                                               field_delim=field_delim)
 
         filename_queue = tf.train.string_input_producer(
@@ -95,7 +96,8 @@ class DataLoader(object):
         voca_name = KagglePreprocessor.VOCABULARY_PREFIX + voca_name
 
         # load look up table that maps words to ids
-        table = tf.contrib.lookup.index_table_from_file(vocabulary_file=voca_path + voca_name, num_oov_buckets=0)
+        table = tf.contrib.lookup.index_table_from_file(vocabulary_file=voca_path + voca_name,
+                                                        default_value=KagglePreprocessor.UNK_TOKEN_ID, num_oov_buckets=0)
 
         # convert to tensor of strings
         split_example = tf.string_split([example], " ")
@@ -114,9 +116,13 @@ class DataLoader(object):
         self.enqueue_op = self.shuffle_queue.enqueue([dense_example, label])
         dense_example, label = self.shuffle_queue.dequeue()
 
+        # add queue to queue runner
+        self.qr = tf.train.QueueRunner(self.shuffle_queue, [self.enqueue_op] * self.num_threads)
+        tf.train.queue_runner.add_queue_runner(self.qr)
+
         # reshape from <unknown> shape into proper form after dequeue from random shuffle queue
         # this is needed so next queue can automatically infer the shape properly
-        dense_example = dense_example[0].sg_reshape(shape=[1, -1])
+        dense_example = dense_example.sg_reshape(shape=[1, -1])
         label = label.sg_reshape(shape=[1])
 
         _, (padded_examples, label_examples) = tf.contrib.training.bucket_by_sequence_length(lengths,
@@ -126,6 +132,10 @@ class DataLoader(object):
                                                                                              dynamic_pad=True,
                                                                                              capacity=self._capacity,
                                                                                              num_threads=self._num_threads)
+
+        # reshape shape into proper form after dequeue from bucket queue
+        padded_examples = padded_examples.sg_reshape(shape=[self._batch_size, -1])
+        label_examples = label_examples.sg_reshape(shape=[self._batch_size])
 
         return padded_examples, label_examples
 
