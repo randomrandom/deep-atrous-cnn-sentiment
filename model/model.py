@@ -66,10 +66,12 @@ def classifier(x, num_classes, voca_size, test=False):
         res = res.sg_conv1d(size=1, dim=in_dim, dout=dropout, bn=True, regularizer=reg_type, name='conv_dout_final')
 
         # final fully convolution layer for softmax
-        res = res.sg_conv1d(size=1, dim=num_classes, act='relu', bn=True, regularizer=reg_type, name='conv_relu_final')
+        res = res.sg_conv1d(size=1, dim=in_dim / 2, dout=dropout, act='relu', bn=True, regularizer=reg_type, name='conv_relu_final')
 
         # perform max over time pooling
         res = res.sg_max(axis=[1])
+
+        res = res.sg_dense(dim=num_classes, name='fc_layer')
 
     return res
 
