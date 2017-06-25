@@ -2,18 +2,22 @@
 
 A Deep Atrous CNN architecture suitable for text (sentiment) classification with variable length.
 
-The architecture substitues the typical CONV->POOL->CONV->POOL->...->CONV->POOL->SOFTMAX architectures, instead to speed up computations it uses atrous convolutions which are resolution perserving. Another great property of these type of networks is the short travel distance between the first and last words, where the path between them is bounded by C*log(d) steps, where C is a constant and d is the length.
+The architecture substitues the typical CONV->POOL->CONV->POOL->...->CONV->POOL->SOFTMAX architectures, instead to speed up computations it uses atrous convolutions which are resolution perserving. Another great property of these type of networks is the short travel distance between the first and last words, where the path between them is bounded by C*log(d) steps, where C is a constant and d is the length of the input sequence.
 
 The architecture is inspired by the [Neural Machine Translation in Linear Time](https://arxiv.org/abs/1610.10099) and [Convolutional Neural Networks for Sentence Classification](https://arxiv.org/abs/1408.5882).
 
 Where atrous layers are similar to the bytenet encoder in [Neural Machine Translation in Linear Time](https://arxiv.org/abs/1610.10099) and the max-over-time pooling idea was inspired from the [Convolutional Neural Networks for Sentence Classification](https://arxiv.org/abs/1408.5882) paper.
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/randomrandom/deep-atrous-cnn-sentiment/master/png/architecture.png" width="1024"/>
+</p>
 
 The network support embedding initialization with pre-trained GloVe vectors ([GloVe: Gloval Vectors for Word Representations](https://nlp.stanford.edu/pubs/glove.pdf)) which handle even rare words quite well compared to word2vec.
 
 To speed up training the model pre-processes any input into "clean" file, which then utilizes for training. The data is read by line from the "clean" files for better memory management. All input data is split into the appropriate buckets and dynamic padding is applied, which provides better accuracy and speed up during training. The input pipeline can read from multiple data sources which makes addition of more data sources easy as long as they are preprocessed in the right format.
 
 <p align="center">
-  <img src="" width="1024"/>
+  <img src="https://raw.githubusercontent.com/randomrandom/deep-atrous-cnn-sentiment/master/png/queue_example.gif" width="1024"/>
 </p>
 
 (Some images are cropped from [WaveNet: A Generative Model for Raw Audio](https://arxiv.org/abs/1609.03499), [Neural Machine Translation in Linear Time](https://arxiv.org/abs/1610.10099) and [Tensorflow's Reading Data Tutorial](https://www.tensorflow.org/programmers_guide/reading_data)) 
@@ -63,6 +67,10 @@ bash launch_tensorboard.sh
 ```
 
 then open your browser [http://localhost:6008/](http://localhost:6008/)
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/randomrandom/deep-atrous-cnn-sentiment/master/png/tensorboard.png" width="1024"/>
+</p>
 
 (kudos to [sugartensor](https://github.com/buriburisuri/sugartensor) for the great tf wrapper which handles all the monitoring out of the box)
 
