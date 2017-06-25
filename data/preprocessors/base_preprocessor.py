@@ -34,7 +34,7 @@ class BasePreprocessor(object):
         self._dictionary = {}
         self.test_split = test_split
 
-        self.data = self._read_file(path, filename, separator)
+        self.data = None
         self.new_data = None
 
     def _build_dictionary(self, data, column_name):
@@ -83,13 +83,13 @@ class BasePreprocessor(object):
         assert self.data is not None, 'No input data has been loaded'
 
         new_data = self.data.copy()
-        new_data[column_name] = new_data[column_name].apply(lambda x: self._preprocess(x))
+        new_data[column_name] = new_data[column_name].apply(lambda x: self.preprocess_single_entry(x))
         self._build_dictionary(new_data, column_name)
 
         self.new_data = new_data
         print('Applied preprocessing to input data')
 
-    def _preprocess(self, entry):
+    def preprocess_single_entry(self, entry):
         entry = self._regex_preprocess(entry)
         entry = self._custom_preprocessing(entry)
 
@@ -113,7 +113,7 @@ class BasePreprocessor(object):
 
         return entry
 
-    def _read_file(self, path, filename, separator):
-        data = pd.read_csv(path + filename, sep=separator)
+    def read_file(self):
+        self.data = pd.read_csv(self.path + self.filename, sep=self.separator)
 
-        return data
+        return self.data

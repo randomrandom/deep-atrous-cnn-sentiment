@@ -35,6 +35,7 @@ class BaseDataLoader(object):
         self._batch_size = batch_size
         self._capacity = capacity
         self._name = name
+        self.table = None
 
         self.vocabulary_size = 0
 
@@ -78,6 +79,7 @@ class BaseDataLoader(object):
 
     def __preprocess_file(self, path, file_name, field_delim, data_column, bucket_boundaries):
         preprocessor = KagglePreprocessor(path, file_name, field_delim)
+        preprocessor.read_file()
         preprocessor.apply_preprocessing(data_column)
         preprocessor.save_preprocessed_file()
         self.vocabulary_size = preprocessor.vocabulary_size
@@ -101,7 +103,7 @@ class BaseDataLoader(object):
         voca_name = KagglePreprocessor.VOCABULARY_PREFIX + voca_name
 
         # load look up table that maps words to ids
-        table = tf.contrib.lookup.index_table_from_file(vocabulary_file=voca_path + voca_name,
+        self.table = tf.contrib.lookup.index_table_from_file(vocabulary_file=voca_path + voca_name,
                                                         default_value=KagglePreprocessor.UNK_TOKEN_ID, num_oov_buckets=0)
 
         # convert to tensor of strings
@@ -115,7 +117,7 @@ class BaseDataLoader(object):
 
         # convert sparse to dense
         dense_example = tf.sparse_tensor_to_dense(split_example, default_value="")
-        dense_example = table.lookup(dense_example)
+        dense_example = self.table.lookup(dense_example)
 
         # get the enqueue op to pass to a coordintor to be run
         self.enqueue_op = self.shuffle_queue.enqueue([dense_example, label])
@@ -163,7 +165,7 @@ class BaseDataLoader(object):
     def _preprocess_example(self, example):
         """
         Applies preprocessing where to the examples
-        :param example: an example to preprocess
+        :param example: an example to preprocess_single_entry
         :return: the preprocessed example
         """
 
