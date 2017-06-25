@@ -1,6 +1,5 @@
-import sugartensor as tf
 import numpy as np
-
+import sugartensor as tf
 
 __author__ = 'georgi.val.stoyan0v@gmail.com'
 

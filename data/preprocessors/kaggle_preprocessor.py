@@ -2,9 +2,8 @@ from data.preprocessors.base_preprocessor import BasePreprocessor
 
 
 class KagglePreprocessor(BasePreprocessor):
-
-    def __init__(self, *args):
-        super().__init__(*args)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     def _custom_preprocessing(self, entry):
 

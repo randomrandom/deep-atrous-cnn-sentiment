@@ -5,16 +5,16 @@ from data.kaggle_loader import KaggleLoader
 __author__ = 'georgi.val.stoyan0v@gmail.com'
 
 
-batch_size = 1
+BATCH_SIZE = 1
 
 BUCKETS = [100, 200, 300, 400, 500]
 DATA_FILE = ['data/datasets/kaggle_popcorn_challenge/labeledTrainData.tsv']
 NUM_LABELS = 2
 
-data = KaggleLoader(BUCKETS, 20000, DATA_FILE) # TODO: determine dataset size dynamically
+data = KaggleLoader(BUCKETS, 20000, DATA_FILE, batch_size=BATCH_SIZE) # TODO: determine dataset size dynamically
 
 # setup input pipeline
-x = tf.placeholder(dtype=tf.string, shape=batch_size)
+x = tf.placeholder(dtype=tf.string, shape=BATCH_SIZE)
 preprocessed_x = data.build_eval_graph(x)
 
 emb = tf.sg_emb(name='emb', voca_size=data.vocabulary_size, dim=embedding_dim)

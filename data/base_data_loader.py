@@ -4,7 +4,6 @@ from abc import abstractclassmethod
 from pathlib import Path
 from data.preprocessors.kaggle_preprocessor import KagglePreprocessor
 
-
 __author__ = 'george.val.stoyan0v@gmail.com'
 
 
@@ -12,10 +11,12 @@ class BaseDataLoader(object):
     _CSV_DELIM = ","
     _DEFAULT_SKIP_HEADER_LINES = 0
     _name = "data_loader"
-    _num_threads = 1 # 32
-    _batch_size = 4  # 64
-    _min_after_dequeue = 8 #_batch_size * _num_threads
-    _capacity = 100# #_min_after_dequeue + (_num_threads + 2) * _batch_size  # as recommended in tf tutorial
+    _num_threads = 32  # 32
+    _batch_size = 32  # 64
+    _min_after_dequeue = _batch_size * _num_threads
+    _capacity = _min_after_dequeue + (_num_threads + 2) * _batch_size  # as recommended in tf tutorial
+
+    DEFAULT_VOCABULARY_SIZE = 50000
 
     def __init__(self, record_defaults, field_delim, data_column, bucket_boundaries, file_names,
                  skip_header_lines=_DEFAULT_SKIP_HEADER_LINES,
@@ -28,15 +29,14 @@ class BaseDataLoader(object):
         self.__data_column = data_column
         self.__bucket_boundaries = bucket_boundaries
 
-        self.num_threads = num_threads
-
         self._used_for_test_data = used_for_test_data
         self._min_after_dequeue = min_after_dequeue
         self._batch_size = batch_size
         self._capacity = capacity
         self._name = name
-        self.table = None
 
+        self.table = None
+        self.num_threads = num_threads
         self.vocabulary_size = 0
 
         self.shuffle_queue = tf.RandomShuffleQueue(capacity=self._capacity, min_after_dequeue=self._min_after_dequeue,
@@ -62,7 +62,7 @@ class BaseDataLoader(object):
 
             old_file_name = tail
             prefix = KagglePreprocessor.TEST_PREFIX if self._used_for_test_data else KagglePreprocessor.CLEAN_PREFIX
-            file_name =  file_path + prefix + tail
+            file_name = file_path + prefix + tail
             file = Path(file_name)
             new_file_names.append(file_name)
 
@@ -78,7 +78,7 @@ class BaseDataLoader(object):
         return new_file_names
 
     def __preprocess_file(self, path, file_name, field_delim, data_column, bucket_boundaries):
-        preprocessor = KagglePreprocessor(path, file_name, field_delim)
+        preprocessor = KagglePreprocessor(path, file_name, field_delim, vocabulary_size=self.DEFAULT_VOCABULARY_SIZE)
         preprocessor.read_file()
         preprocessor.apply_preprocessing(data_column)
         preprocessor.save_preprocessed_file()
@@ -90,7 +90,7 @@ class BaseDataLoader(object):
 
         original_file_names = file_names[:]
         file_names = self.__generate_preprocessed_files(file_names, data_column, bucket_boundaries,
-                                                              field_delim=field_delim)
+                                                        field_delim=field_delim)
 
         filename_queue = tf.train.string_input_producer(
             file_names, num_epochs=num_epochs, shuffle=shuffle
@@ -104,7 +104,8 @@ class BaseDataLoader(object):
 
         # load look up table that maps words to ids
         self.table = tf.contrib.lookup.index_table_from_file(vocabulary_file=voca_path + voca_name,
-                                                        default_value=KagglePreprocessor.UNK_TOKEN_ID, num_oov_buckets=0)
+                                                             default_value=KagglePreprocessor.UNK_TOKEN_ID,
+                                                             num_oov_buckets=0)
 
         # convert to tensor of strings
         split_example = tf.string_split([example], " ")

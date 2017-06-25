@@ -6,4 +6,4 @@ __author__ = 'georgi.val.stoyan0v@gmail.com'
 
 
 preprocess_kaggle.do_magic('./data/datasets/kaggle_popcorn_challenge/', 'labeledTrainData.tsv', KaggleLoader.TSV_DELIM,
-                           .2, KaggleLoader.DATA_COLUMN)
+                           .2, KaggleLoader.DATA_COLUMN, vocabulary_size=KaggleLoader.DEFAULT_VOCABULARY_SIZE)

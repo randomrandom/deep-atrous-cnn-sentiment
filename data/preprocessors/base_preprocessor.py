@@ -7,15 +7,16 @@ from abc import abstractclassmethod
 class BasePreprocessor(object):
     CLEAN_PREFIX = 'clean_'
     TEST_PREFIX = 'clean_test_'
-    _METADATA_PREFIX = 'metadata_'
     VOCABULARY_PREFIX = 'vocabulary_'
+    UNK_TOKEN_ID = 1
+
+    _METADATA_PREFIX = 'metadata_'
     _PAD_TOKEN = '<PAD>'
     _UNK_TOKEN = '<UNK>'
     _EOS_TOKEN = '<EOS>'
-    UNK_TOKEN_ID = 1
     _DEFAULT_TEST_SPLIT = .2
 
-    _VOCABULARY_SIZE = 2000
+    _VOCABULARY_SIZE = 50000
 
     def __init__(self, path, filename, separator, test_split=_DEFAULT_TEST_SPLIT,
                  vocabulary_size=_VOCABULARY_SIZE, pad_token=_PAD_TOKEN,
@@ -24,6 +25,8 @@ class BasePreprocessor(object):
         self._remove_space_after_quote = re.compile(r'\b\'\s+\b')
         self._add_space = re.compile('([.,!?()-])')
         self._remove_spaces = re.compile('\s{2,}')
+        self._dictionary = {}
+
         self.path = path
         self.filename = filename
         self.separator = separator
@@ -31,9 +34,7 @@ class BasePreprocessor(object):
         self.unk_token = unk_token
         self.eos_token = eos_token
         self.vocabulary_size = vocabulary_size
-        self._dictionary = {}
         self.test_split = test_split
-
         self.data = None
         self.new_data = None
 

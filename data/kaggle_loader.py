@@ -2,7 +2,6 @@ import sugartensor as tf
 from data.base_data_loader import BaseDataLoader
 from data.preprocessors.kaggle_preprocessor import KagglePreprocessor
 
-
 __author__ = 'georgi.val.stoyan0v@gmail.com'
 
 
@@ -12,13 +11,14 @@ class KaggleLoader(BaseDataLoader):
     DATA_COLUMN = 'review'
 
     def __init__(self, bucket_boundaries, data_size, file_names, *args, **kwargs):
-        record_defaults = [["0"], [0], [""]]
-        skip_header_lines = 1
-        data_column = KaggleLoader.DATA_COLUMN
+        self.__file_preprocessor = None
 
         self.field_delim = KaggleLoader.TSV_DELIM
         self.file_names = file_names
-        self.__file_preprocessor = None
+
+        record_defaults = [["0"], [0], [""]]
+        skip_header_lines = 1
+        data_column = KaggleLoader.DATA_COLUMN
 
         super().__init__(record_defaults, self.field_delim, data_column, bucket_boundaries, file_names, *args,
                          skip_header_lines=skip_header_lines, **kwargs)
@@ -60,7 +60,7 @@ class KaggleLoader(BaseDataLoader):
             voca_path, voca_name = BaseDataLoader._split_file_to_path_and_name(
                 self.file_names[0])  # TODO: will be break with multiple filenames
             voca_name = KagglePreprocessor.VOCABULARY_PREFIX + voca_name
-            self.__file_preprocessor =  KagglePreprocessor(voca_path, voca_name, self.field_delim)
+            self.__file_preprocessor = KagglePreprocessor(voca_path, voca_name, self.field_delim)
 
         entry = self.__file_preprocessor.preprocess_single_entry(entry)
 
