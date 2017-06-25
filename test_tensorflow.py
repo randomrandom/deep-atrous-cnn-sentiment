@@ -2,6 +2,10 @@ import sugartensor as tf
 
 from data.kaggle_loader import KaggleLoader
 
+
+__author__ = 'georgi.val.stoyan0v@gmail.com'
+
+
 data = KaggleLoader([3,6], 11, ['data/datasets/kaggle_popcorn_challenge/test.tsv'])
 x, y = data.source, data.target
 

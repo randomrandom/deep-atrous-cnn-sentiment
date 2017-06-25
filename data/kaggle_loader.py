@@ -1,7 +1,9 @@
 import sugartensor as tf
-
 from data.base_data_loader import BaseDataLoader
 from data.preprocessors.kaggle_preprocessor import KagglePreprocessor
+
+
+__author__ = 'georgi.val.stoyan0v@gmail.com'
 
 
 class KaggleLoader(BaseDataLoader):

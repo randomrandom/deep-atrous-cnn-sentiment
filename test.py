@@ -1,6 +1,9 @@
 from model.model import *
-
 from data.kaggle_loader import KaggleLoader
+
+
+__author__ = 'georgi.val.stoyan0v@gmail.com'
+
 
 batch_size = 1
 
@@ -30,7 +33,7 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
     tf.sg_init(sess)
     sess.run(tf.tables_initializer())
 
-    tf.sg_restore(sess, tf.train.latest_checkpoint('asset/train')) # when using Windows WSL pass hardcoded model name
+    tf.sg_restore(sess, tf.train.latest_checkpoint('asset/train'))
 
     print("Enter text: \n>", end='', flush=True)
     for line in tf.sys.stdin:

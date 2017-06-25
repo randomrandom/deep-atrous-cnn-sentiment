@@ -2,8 +2,8 @@ import ntpath
 import sugartensor as tf
 from abc import abstractclassmethod
 from pathlib import Path
-
 from data.preprocessors.kaggle_preprocessor import KagglePreprocessor
+
 
 __author__ = 'george.val.stoyan0v@gmail.com'
 

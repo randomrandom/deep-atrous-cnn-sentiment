@@ -2,6 +2,13 @@ import sugartensor as tf
 import numpy as np
 
 
+__author__ = 'georgi.val.stoyan0v@gmail.com'
+
+
+#
+# borrowed from sugartensor, applied some bug fixes to allow table initialization
+#
+
 def classifier_train(**kwargs):
     r"""Trains the model.
 

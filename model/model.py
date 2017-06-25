@@ -1,7 +1,9 @@
 import sugartensor as tf
 import numpy as np
 
+
 __author__ = 'georgi.val.stoyan0v@gmail.com'
+
 
 #
 # hyper parameters
@@ -45,7 +47,7 @@ tf.sg_inject_func(sg_res_block)
 
 
 #
-# cnn classifier graph ( causal convolution )
+# cnn classifier graph ( atrous convolution )
 #
 
 def classifier(x, num_classes, voca_size, test=False):
@@ -60,7 +62,8 @@ def classifier(x, num_classes, voca_size, test=False):
                    .sg_res_block(size=3, block=i, rate=1, causal=False, is_first=True)
                    .sg_res_block(size=3, block=i, rate=2, causal=False)
                    .sg_res_block(size=3, block=i, rate=4, causal=False)
-                   .sg_res_block(size=3, block=i, rate=8, causal=False))
+                   .sg_res_block(size=3, block=i, rate=8, causal=False)
+                   .sg_res_block(size=3, block=i, rate=16, causal=False))
 
         in_dim = res.get_shape().as_list()[-1]
         res = res.sg_conv1d(size=1, dim=in_dim, dout=dropout, bn=True, regularizer=reg_type, name='conv_dout_final')

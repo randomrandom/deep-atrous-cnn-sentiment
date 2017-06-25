@@ -1,8 +1,10 @@
-import sugartensor as tf
 from model.model import *
 from model.trainer import classifier_train
-
 from data.kaggle_loader import KaggleLoader
+
+
+__author__ = 'georgi.val.stoyan0v@gmail.com'
+
 
 BUCKETS = [100, 200, 300, 400, 500]
 DATA_FILE = ['data/datasets/kaggle_popcorn_challenge/labeledTrainData.tsv']
@@ -38,5 +40,5 @@ with tf.sg_context(name='model', reuse=True):
     val_loss = (test_classifier.sg_ce(target=val_y))
 
 # train
-classifier_train(sess=sess, log_interval=50, lr=2e-1, loss=loss, eval_metric=[acc, val_loss],
+classifier_train(sess=sess, log_interval=50, lr=1e-3, loss=loss, eval_metric=[acc, val_loss],
         ep_size=data.num_batches, max_ep=150, early_stop=False, data=data)
