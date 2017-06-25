@@ -59,10 +59,11 @@ class BaseDataLoader(object):
         for filename in file_names:
             file_path, tail = BaseDataLoader._split_file_to_path_and_name(filename)
 
+            old_file_name = tail
             prefix = KagglePreprocessor.TEST_PREFIX if self._used_for_test_data else KagglePreprocessor.CLEAN_PREFIX
-            file_name =  prefix + tail
-            file = Path(file_path + file_name)
-            new_file_names.append(file_path + file_name)
+            file_name =  file_path + prefix + tail
+            file = Path(file_name)
+            new_file_names.append(file_name)
 
             print(file)
             if file.exists():
@@ -71,7 +72,7 @@ class BaseDataLoader(object):
                 except OSError:
                     print("File not found %s" % file_name)
 
-            self.__preprocess_file(file_path, file_name, field_delim, data_column, bucket_boundaries)
+            self.__preprocess_file(file_path, old_file_name, field_delim, data_column, bucket_boundaries)
 
         return new_file_names
 
