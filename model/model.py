@@ -1,19 +1,25 @@
-import sugartensor as tf
 import numpy as np
-
+import sugartensor as tf
 
 __author__ = 'georgi.val.stoyan0v@gmail.com'
-
 
 #
 # hyper parameters
 #
 
-embedding_dim = 32  # embedding dimension
-latent_dim = 64     # hidden layer dimension
-num_blocks = 1      # dilated blocks
-reg_type = 'l2'     # type of regularization used
+EMBEDDINGS_DIR = 'model/embeddings/'
+GLOVE_6B_50d_EMBEDDINGS = 'glove.6B.50d.txt'
+GLOVE_6B_100d_EMBEDDINGS = 'glove.6B.100d.txt'
+GLOVE_6B_200d_EMBEDDINGS = 'glove.6B.200d.txt'
+GLOVE_6B_300d_EMBEDDINGS = 'glove.6B.300d.txt'
+
+embedding_dim = 100  # embedding dimension
+latent_dim = 64  # hidden layer dimension
+num_blocks = 1  # dilated blocks
+reg_type = 'l2'  # type of regularization used
 default_dout = 0.2  # define the default dropout rate
+use_pre_trained_embeddings = True  # whether to use pre-trained embedding vectors
+pre_trained_embeddings_file = EMBEDDINGS_DIR + GLOVE_6B_100d_EMBEDDINGS  # the location of the pre-trained embeddings
 
 
 # residual block
@@ -51,7 +57,6 @@ tf.sg_inject_func(sg_res_block)
 #
 
 def classifier(x, num_classes, voca_size, test=False):
-
     with tf.sg_context(name='classifier'):
         dropout = 0 if test else default_dout
         res = x.sg_conv1d(size=1, dim=latent_dim, bn=True, regularizer=reg_type, name='decompressor')
@@ -69,7 +74,8 @@ def classifier(x, num_classes, voca_size, test=False):
         res = res.sg_conv1d(size=1, dim=in_dim, dout=dropout, bn=True, regularizer=reg_type, name='conv_dout_final')
 
         # final fully convolution layer for softmax
-        res = res.sg_conv1d(size=1, dim=in_dim / 2, dout=dropout, act='relu', bn=True, regularizer=reg_type, name='conv_relu_final')
+        res = res.sg_conv1d(size=1, dim=in_dim / 2, dout=dropout, act='relu', bn=True, regularizer=reg_type,
+                            name='conv_relu_final')
 
         # perform max over time pooling
         res = res.sg_max(axis=[1])
@@ -81,9 +87,9 @@ def classifier(x, num_classes, voca_size, test=False):
 
 def init_custom_embeddings(name, embeddings_matrix, summary=True,
                            trainable=False):
-    '''
+    """
     Initializes the embedding vector with custom preloaded embeddings
-    '''
+    """
 
     embedding = np.array(embeddings_matrix)
     w = tf.get_variable(name, shape=embedding.shape,

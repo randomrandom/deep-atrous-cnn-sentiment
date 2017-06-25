@@ -20,7 +20,14 @@ val_x, val_y = validation.source, validation.target
 # session with multiple GPU support
 sess = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
 
-emb = tf.sg_emb(name='emb', voca_size=data.vocabulary_size, dim=embedding_dim)
+# setup embeddings, preload pre-trained embeddings if needed
+emb = None
+if use_pre_trained_embeddings:
+    embedding_matrix = data.preload_embeddings(embedding_dim, pre_trained_embeddings_file)
+    emb = init_custom_embeddings(name='emb_x', embeddings_matrix=embedding_matrix)
+else:
+    emb = tf.sg_emb(name='emb', voca_size=data.vocabulary_size, dim=embedding_dim)
+
 z_x = x.sg_lookup(emb=emb)
 v_x = val_x.sg_lookup(emb=emb)
 

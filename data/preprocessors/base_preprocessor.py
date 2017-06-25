@@ -1,4 +1,5 @@
 import collections
+
 import pandas as pd
 import re
 from abc import abstractclassmethod
@@ -118,3 +119,12 @@ class BasePreprocessor(object):
         self.data = pd.read_csv(self.path + self.filename, sep=self.separator)
 
         return self.data
+
+    @staticmethod
+    def read_vocabulary(file_path, separator):
+        dictionary = pd.read_csv(file_path, sep=separator, header=None).to_dict()
+
+        # remap value <> key to key <> value
+        dictionary = {v: k for k, v in dictionary[0].items()}
+
+        return dictionary

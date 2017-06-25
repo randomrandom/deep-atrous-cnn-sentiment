@@ -1,7 +1,10 @@
+from pathlib import Path
+
 import ntpath
+import numpy as np
 import sugartensor as tf
 from abc import abstractclassmethod
-from pathlib import Path
+
 from data.preprocessors.kaggle_preprocessor import KagglePreprocessor
 
 __author__ = 'george.val.stoyan0v@gmail.com'
@@ -17,6 +20,7 @@ class BaseDataLoader(object):
     _capacity = _min_after_dequeue + (_num_threads + 2) * _batch_size  # as recommended in tf tutorial
 
     DEFAULT_VOCABULARY_SIZE = 50000
+    DEFAULT_PRETRAINED_EMBEDDINGS = 'data/embeddings/glove.6B.300d.txt'
 
     def __init__(self, record_defaults, field_delim, data_column, bucket_boundaries, file_names,
                  skip_header_lines=_DEFAULT_SKIP_HEADER_LINES,
@@ -28,6 +32,7 @@ class BaseDataLoader(object):
         self.__skip_header_lines = skip_header_lines
         self.__data_column = data_column
         self.__bucket_boundaries = bucket_boundaries
+        self.__vocabulary_file = None
 
         self._used_for_test_data = used_for_test_data
         self._min_after_dequeue = min_after_dequeue
@@ -101,6 +106,7 @@ class BaseDataLoader(object):
         voca_path, voca_name = BaseDataLoader._split_file_to_path_and_name(
             original_file_names[0])  # TODO: will be break with multiple filenames
         voca_name = KagglePreprocessor.VOCABULARY_PREFIX + voca_name
+        self.__vocabulary_file = voca_path + voca_name
 
         # load look up table that maps words to ids
         self.table = tf.contrib.lookup.index_table_from_file(vocabulary_file=voca_path + voca_name,
@@ -171,3 +177,40 @@ class BaseDataLoader(object):
         """
 
         return example
+
+    def preload_embeddings(self, embed_dim, file_name=DEFAULT_PRETRAINED_EMBEDDINGS):
+        """
+        Pre-loads word embeddings like word2vec and Glove
+        :param embed_dim: the embedding dimension, currently should equal to the one in the original pre-trained vector
+        :param file_name: the name of the pre-trained embeddings file
+        :return: the loaded pre-trained embeddings
+        """
+
+        pre_trained_emb = np.random.uniform(-0.05, 0.05, (self.vocabulary_size, embed_dim))
+        with open(file_name, 'r', encoding='utf-8') as emb_file:
+            mapped_words = 0
+
+            dictionary = KagglePreprocessor.read_vocabulary(self.__vocabulary_file, self.__field_delim)
+            missing_words = dictionary.copy()
+
+            for line in emb_file.readlines():
+                row = line.strip().split(' ')
+                word = row[0]
+
+                # TODO: PCA should be added to support different embedding dimensions from pre-trained embeddings
+                assert len(row[1:]) == embed_dim, \
+                    'Embedding dimension should be same as the one in the pre-trained embeddings.'
+
+                if word in dictionary:
+                    mapped_words = mapped_words + 1
+                    pre_trained_emb[dictionary[word]] = row[1:]
+                    del missing_words[word]
+
+            print('Mapped words to pre-trained embeddings: %d' % mapped_words)
+
+            # TODO: should do some updates in voca_size if mapped words are less, currently missing words are random embeddings which are not going to be trained
+            # assert mapped_words == self.VOCABULARY_SIZE, 'Glove mapping should equal to the vocabulary size'
+
+        print('Loaded pre-trained embeddings')
+
+        return pre_trained_emb
