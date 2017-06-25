@@ -2,11 +2,11 @@
 
 A Deep Atrous CNN architecture suitable for text (sentiment) classification with variable length.
 
-The architecture substitues the typical CONV->POOL->CONV->POOL->...->CONV->POOL->SOFTMAX architectures, instead to speed up computations it uses atrous convolutions which are resolution perserving. Another great property of these type of networks is the short travel distance between the first and last words, where the path between them is bounded by C*log(d) steps, where C is a constant and d is the length of the input sequence.
+The architecture substitutes the typical CONV->POOL->CONV->POOL->...->CONV->POOL->SOFTMAX architectures, instead to speed up computations it uses atrous convolutions which are resolution perserving. Another great property of these type of networks is the short travel distance between the first and last words, where the path between them is bounded by C*log(d) steps, where C is a constant and d is the length of the input sequence.
 
 The architecture is inspired by the [Neural Machine Translation in Linear Time](https://arxiv.org/abs/1610.10099) and [Convolutional Neural Networks for Sentence Classification](https://arxiv.org/abs/1408.5882).
 
-Where atrous layers are similar to the bytenet encoder in [Neural Machine Translation in Linear Time](https://arxiv.org/abs/1610.10099) and the max-over-time pooling idea was inspired from the [Convolutional Neural Networks for Sentence Classification](https://arxiv.org/abs/1408.5882) paper.
+Where the Atrous CNN layers are similar to the ones in the bytenet encoder in [Neural Machine Translation in Linear Time](https://arxiv.org/abs/1610.10099) and the max-over-time pooling idea was inspired from the [Convolutional Neural Networks for Sentence Classification](https://arxiv.org/abs/1408.5882) paper.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/randomrandom/deep-atrous-cnn-sentiment/master/png/architecture.png" width="1024"/>
@@ -46,6 +46,7 @@ Current version : __***0.0.0.1***__
 ## Dataset & Preprocessing 
 Currently the only supported dataset is the one provided by the [Bag of Words Meets Bags of Popcorn](https://www.kaggle.com/c/word2vec-nlp-tutorial/rules) challenge, instructions how to obtain and preprocess it can be found [here](https://github.com/randomrandom/deep-atrous-cnn-sentiment/tree/master/data/datasets/kaggle_popcorn_challenge)
 
+The Kaggle dataset contains 25,000 labeled examples of movie reviews. Positive movie reviews are labeled with 1, while negative movie reviews are labeled with 0. The dataset is split into 20,000 training and 5,000 validation examples.
 ## Training the network
 
 Execute
@@ -58,7 +59,7 @@ CUDA_VISIBLE_DEVICES=0,1 python train.py ( <== Use only GPU 0, 1 )
 Currently the model achieves up to 97% accuracy on the validation set.
 
 ## Monitoring and Debugging the training
-In order to monitor the trainin, validation losses and accuracy and other interesting metrics like gradients, activations, distributions, etc. across layers do the following:
+In order to monitor the training, validation losses and accuracy and other interesting metrics like gradients, activations, distributions, etc. across layers do the following:
 
 
 ```
