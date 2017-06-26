@@ -1,4 +1,4 @@
-# Deep-Atrous-CNN-Text-Network: End-to-end word level text classification for sentiment analysis and other
+# Deep-Atrous-CNN-Text-Network: End-to-end word level model for sentiment analysis and other text classifications
 
 A Deep Atrous CNN architecture suitable for text (sentiment) classification with variable length.
 
