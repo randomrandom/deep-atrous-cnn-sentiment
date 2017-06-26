@@ -7,12 +7,12 @@ __author__ = 'georgi.val.stoyan0v@gmail.com'
 
 BATCH_SIZE = 32
 
-BUCKETS = [100, 200, 300, 400, 500]
+BUCKETS = [100, 170, 240, 290, 340]
 DATA_FILE = ['data/datasets/kaggle_popcorn_challenge/labeledTrainData.tsv']
 NUM_LABELS = 2
 
-data = KaggleLoader(BUCKETS, 20000, DATA_FILE, batch_size=BATCH_SIZE) # TODO: determine dataset size dynamically
-validation = KaggleLoader(BUCKETS, 5000, DATA_FILE, used_for_test_data=True, batch_size=BATCH_SIZE)
+data = KaggleLoader(BUCKETS, DATA_FILE, batch_size=BATCH_SIZE)
+validation = KaggleLoader(BUCKETS, DATA_FILE, used_for_test_data=True, batch_size=BATCH_SIZE)
 
 x, y = data.source, data.target
 val_x, val_y = validation.source, validation.target

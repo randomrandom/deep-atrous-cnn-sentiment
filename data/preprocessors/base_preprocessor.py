@@ -15,12 +15,8 @@ class BasePreprocessor(object):
     _PAD_TOKEN = '<PAD>'
     _UNK_TOKEN = '<UNK>'
     _EOS_TOKEN = '<EOS>'
-    _DEFAULT_TEST_SPLIT = .2
 
-    _VOCABULARY_SIZE = 50000
-
-    def __init__(self, path, filename, separator, test_split=_DEFAULT_TEST_SPLIT,
-                 vocabulary_size=_VOCABULARY_SIZE, pad_token=_PAD_TOKEN,
+    def __init__(self, path, filename, separator, vocabulary_size, max_data_length, test_split, pad_token=_PAD_TOKEN,
                  unk_token=_UNK_TOKEN, eos_token=_EOS_TOKEN):
         self._regex = re.compile('[%s]' % re.escape(r"""#"$%&'()*+/:;<=>@[\]^_`{|}~"""))
         self._remove_space_after_quote = re.compile(r'\b\'\s+\b')
@@ -35,9 +31,12 @@ class BasePreprocessor(object):
         self.unk_token = unk_token
         self.eos_token = eos_token
         self.vocabulary_size = vocabulary_size
+        self.max_data_length = max_data_length
         self.test_split = test_split
         self.data = None
         self.new_data = None
+        self.train_size = 0
+        self.test_size = 0
 
     def _build_dictionary(self, data, column_name):
         all_text = []
@@ -73,18 +72,19 @@ class BasePreprocessor(object):
         assert self.new_data is not None, 'No preprocessing has been applied, did you call apply_preprocessing?'
 
         data_size = self.new_data.shape[0]
-        train_size = (int)(data_size * (1 - self.test_split))
+        self.train_size = (int)(data_size * (1 - self.test_split))
+        self.test_size = data_size - self.train_size
 
-        self.new_data.iloc[:train_size, :].to_csv(self.path + self.CLEAN_PREFIX + self.filename, sep=self.separator,
+        self.new_data.iloc[:self.train_size, :].to_csv(self.path + self.CLEAN_PREFIX + self.filename, sep=self.separator,
                                                   index=False)
-        self.new_data.iloc[train_size:, :].to_csv(self.path + self.TEST_PREFIX + self.filename, sep=self.separator,
+        self.new_data.iloc[self.train_size:, :].to_csv(self.path + self.TEST_PREFIX + self.filename, sep=self.separator,
                                                   index=False)
         print('Successfully saved preprocessed files')
 
     def apply_preprocessing(self, column_name):
         assert self.data is not None, 'No input data has been loaded'
 
-        new_data = self.data.copy()
+        new_data = self.data.loc[self.data[column_name].str.len() < self.max_data_length].copy()
         new_data[column_name] = new_data[column_name].apply(lambda x: self.preprocess_single_entry(x))
         self._build_dictionary(new_data, column_name)
 

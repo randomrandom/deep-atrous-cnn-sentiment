@@ -1,4 +1,5 @@
 import sugartensor as tf
+
 from data.base_data_loader import BaseDataLoader
 from data.preprocessors.kaggle_preprocessor import KagglePreprocessor
 
@@ -10,7 +11,7 @@ class KaggleLoader(BaseDataLoader):
     TSV_DELIM = '\t'
     DATA_COLUMN = 'review'
 
-    def __init__(self, bucket_boundaries, data_size, file_names, *args, **kwargs):
+    def __init__(self, bucket_boundaries, file_names, *args, **kwargs):
         self.__file_preprocessor = None
 
         self.field_delim = KaggleLoader.TSV_DELIM
@@ -24,6 +25,8 @@ class KaggleLoader(BaseDataLoader):
                          skip_header_lines=skip_header_lines, **kwargs)
 
         self.source, self.target = self.get_data()
+
+        data_size = self.test_size if self._used_for_test_data else self.train_size
         self.num_batches = data_size // self._batch_size
 
     def _read_file(self, filename_queue, record_defaults, field_delim=BaseDataLoader._CSV_DELIM,
@@ -60,7 +63,9 @@ class KaggleLoader(BaseDataLoader):
             voca_path, voca_name = BaseDataLoader._split_file_to_path_and_name(
                 self.file_names[0])  # TODO: will be break with multiple filenames
             voca_name = KagglePreprocessor.VOCABULARY_PREFIX + voca_name
-            self.__file_preprocessor = KagglePreprocessor(voca_path, voca_name, self.field_delim)
+            self.__file_preprocessor = KagglePreprocessor(voca_path, voca_name, self.field_delim,
+                                                          self.DEFAULT_VOCABULARY_SIZE, self.DEFAULT_MAX_DATA_LENGTH,
+                                                          self.DEFAULT_TEST_SPLIT)
 
         entry = self.__file_preprocessor.preprocess_single_entry(entry)
 

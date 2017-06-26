@@ -19,6 +19,8 @@ class BaseDataLoader(object):
     _min_after_dequeue = _batch_size * _num_threads
     _capacity = _min_after_dequeue + (_num_threads + 2) * _batch_size  # as recommended in tf tutorial
 
+    DEFAULT_TEST_SPLIT = .1
+    DEFAULT_MAX_DATA_LENGTH = 2000
     DEFAULT_VOCABULARY_SIZE = 50000
     DEFAULT_PRETRAINED_EMBEDDINGS = 'data/embeddings/glove.6B.300d.txt'
 
@@ -43,6 +45,8 @@ class BaseDataLoader(object):
         self.table = None
         self.num_threads = num_threads
         self.vocabulary_size = 0
+        self.train_size = 0
+        self.test_size = 0
 
         self.shuffle_queue = tf.RandomShuffleQueue(capacity=self._capacity, min_after_dequeue=self._min_after_dequeue,
                                                    dtypes=[tf.int64, tf.int32], shapes=None)
@@ -83,11 +87,14 @@ class BaseDataLoader(object):
         return new_file_names
 
     def __preprocess_file(self, path, file_name, field_delim, data_column, bucket_boundaries):
-        preprocessor = KagglePreprocessor(path, file_name, field_delim, vocabulary_size=self.DEFAULT_VOCABULARY_SIZE)
+        preprocessor = KagglePreprocessor(path, file_name, field_delim, self.DEFAULT_VOCABULARY_SIZE,
+                                          self.DEFAULT_MAX_DATA_LENGTH, self.DEFAULT_TEST_SPLIT)
         preprocessor.read_file()
         preprocessor.apply_preprocessing(data_column)
         preprocessor.save_preprocessed_file()
         self.vocabulary_size = preprocessor.vocabulary_size
+        self.train_size = preprocessor.train_size
+        self.test_size = preprocessor.test_size
 
     def __load_batch(self, file_names, record_defaults, data_column, bucket_boundaries, field_delim=_CSV_DELIM,
                      skip_header_lines=0,

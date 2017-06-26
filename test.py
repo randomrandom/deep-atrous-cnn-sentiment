@@ -9,7 +9,7 @@ BUCKETS = [100, 200, 300, 400, 500]
 DATA_FILE = ['data/datasets/kaggle_popcorn_challenge/labeledTrainData.tsv']
 NUM_LABELS = 2
 
-data = KaggleLoader(BUCKETS, 20000, DATA_FILE, batch_size=BATCH_SIZE)  # TODO: determine dataset size dynamically
+data = KaggleLoader(BUCKETS, DATA_FILE, batch_size=BATCH_SIZE)
 
 # setup input pipeline
 x = tf.placeholder(dtype=tf.string, shape=BATCH_SIZE)
