@@ -1,5 +1,6 @@
 
 .idea/
+asset/train
 data/datasets/kaggle_popcorn_challenge/*.csv
 data/datasets/kaggle_popcorn_challenge/*.tsv
 /data/datasets/sst1/
