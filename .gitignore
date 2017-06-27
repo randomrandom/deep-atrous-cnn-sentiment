@@ -1,6 +1,7 @@
 
 .idea/
 asset/train
+model/embeddings/glove*
 data/datasets/kaggle_popcorn_challenge/*.csv
 data/datasets/kaggle_popcorn_challenge/*.tsv
 /data/datasets/sst1/
