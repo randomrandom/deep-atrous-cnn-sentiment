@@ -14,7 +14,7 @@ Where the Atrous CNN layers are similar to the ones in the bytenet encoder in [N
 
 The network support embedding initialization with pre-trained GloVe vectors ([GloVe: Gloval Vectors for Word Representations](https://nlp.stanford.edu/pubs/glove.pdf)) which handle even rare words quite well compared to word2vec.
 
-To speed up training the model pre-processes any input into "clean" file, which then utilizes for training. The data is read by line from the "clean" files for better memory management. All input data is split into the appropriate buckets and dynamic padding is applied, which provides better accuracy and speed up during training. The input pipeline can read from multiple data sources which makes addition of more data sources easy as long as they are preprocessed in the right format.
+To speed up training the model pre-processes any input into "clean" file, which then utilizes for training. The data is read by line from the "clean" files for better memory management. All input data is split into the appropriate buckets and dynamic padding is applied, which provides better accuracy and speed up during training. The input pipeline can read from multiple data sources which makes addition of more data sources easy as long as they are preprocessed in the right format. The model can be trained on multiple GPUs if the hardware provides this capability.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/randomrandom/deep-atrous-cnn-sentiment/master/png/queue_example.gif" width="1024"/>
@@ -48,6 +48,8 @@ Currently the only supported dataset is the one provided by the [Bag of Words Me
 
 The Kaggle dataset contains 25,000 labeled examples of movie reviews. Positive movie reviews are labeled with 1, while negative movie reviews are labeled with 0. The dataset is split into 20,000 training and 5,000 validation examples.
 ## Training the network
+
+The model can be trained across multiple GPUs to speed up the computations. In order to start the training:
 
 Execute
 <pre><code>
