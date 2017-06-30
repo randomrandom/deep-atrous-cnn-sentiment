@@ -11,6 +11,9 @@ class KaggleLoader(BaseDataLoader):
     TSV_DELIM = '\t'
     DATA_COLUMN = 'review'
 
+    DEFAULT_META_DATA_FILE = 'metadata_labeledTrainData.tsv'
+    DEFAULT_METADATA_DIR = 'data/datasets/kaggle_popcorn_challenge/'
+
     def __init__(self, bucket_boundaries, file_names, *args, **kwargs):
         self.__file_preprocessor = None
 
@@ -22,7 +25,8 @@ class KaggleLoader(BaseDataLoader):
         data_column = KaggleLoader.DATA_COLUMN
 
         super().__init__(record_defaults, self.field_delim, data_column, bucket_boundaries, file_names, *args,
-                         skip_header_lines=skip_header_lines, **kwargs)
+                         skip_header_lines=skip_header_lines, meta_file=KaggleLoader.DEFAULT_META_DATA_FILE,
+                         save_dir=KaggleLoader.DEFAULT_METADATA_DIR, **kwargs)
 
         self.source, self.target = self.get_data()
 

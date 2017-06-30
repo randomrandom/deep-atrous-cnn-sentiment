@@ -4,6 +4,7 @@ import ntpath
 import numpy as np
 import sugartensor as tf
 from abc import abstractclassmethod
+from tensorflow.contrib.tensorboard.plugins import projector
 
 from data.preprocessors.kaggle_preprocessor import KagglePreprocessor
 
@@ -24,10 +25,14 @@ class BaseDataLoader(object):
     DEFAULT_VOCABULARY_SIZE = 50000
     DEFAULT_PRETRAINED_EMBEDDINGS = 'data/embeddings/glove.6B.300d.txt'
 
+    DEFAULT_META_DATA_FILE = 'metadata.tsv'
+    DEFAULT_METADATA_DIR = 'asset/train/'
+
     def __init__(self, record_defaults, field_delim, data_column, bucket_boundaries, file_names,
                  skip_header_lines=_DEFAULT_SKIP_HEADER_LINES,
                  num_threads=_num_threads, batch_size=_batch_size, min_after_dequeue=_min_after_dequeue,
-                 capacity=_capacity, used_for_test_data=False, name=_name):
+                 capacity=_capacity, used_for_test_data=False, meta_file=DEFAULT_META_DATA_FILE,
+                 save_dir=DEFAULT_METADATA_DIR, name=_name):
         self.__file_names = file_names
         self.__field_delim = field_delim
         self.__record_defaults = record_defaults
@@ -42,6 +47,8 @@ class BaseDataLoader(object):
         self._capacity = capacity
         self._name = name
 
+        self.meta_file = meta_file
+        self.save_dir = save_dir
         self.table = None
         self.num_threads = num_threads
         self.vocabulary_size = 0
@@ -210,7 +217,7 @@ class BaseDataLoader(object):
 
                 if word in dictionary:
                     mapped_words = mapped_words + 1
-                    pre_trained_emb[dictionary[word]] = row[1:]
+                    pre_trained_emb[dictionary[word]-1] = row[1:]
                     del missing_words[word]
 
             print('Mapped words to pre-trained embeddings: %d' % mapped_words)
@@ -221,3 +228,27 @@ class BaseDataLoader(object):
         print('Loaded pre-trained embeddings')
 
         return pre_trained_emb
+
+    def visualize_embeddings(self, sess, tensor, name):
+        """
+        Visualises an embedding vector into Tensorboard
+
+        :param sess: Tensorflow session object
+        :param tensor:  The embedding tensor to be visualizd
+        :param name: Name of the tensor
+        """
+
+        # make directory if not exist
+        if not tf.os.path.exists(self.save_dir):
+            tf.os.makedirs(self.save_dir)
+
+        # summary writer
+        summary_writer = tf.summary.FileWriter(self.save_dir, graph=tf.get_default_graph())
+
+        # embedding visualizer
+        config = projector.ProjectorConfig()
+        emb = config.embeddings.add()
+        emb.tensor_name = name  # tensor
+        emb.metadata_path = tf.os.path.join(self.save_dir, self.meta_file)  # metadata file
+        print(tf.os.path.abspath(emb.metadata_path))
+        projector.visualize_embeddings(summary_writer, config)

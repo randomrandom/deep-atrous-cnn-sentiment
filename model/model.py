@@ -13,13 +13,13 @@ GLOVE_6B_100d_EMBEDDINGS = 'glove.6B.100d.txt'
 GLOVE_6B_200d_EMBEDDINGS = 'glove.6B.200d.txt'
 GLOVE_6B_300d_EMBEDDINGS = 'glove.6B.300d.txt'
 
-embedding_dim = 100  # embedding dimension
-latent_dim = 64  # hidden layer dimension
-num_blocks = 1  # dilated blocks
+embedding_dim = 300  # 300 # embedding dimension
+latent_dim = 64  # 256 # hidden layer dimension
+num_blocks = 1  # 2 # dilated blocks
 reg_type = 'l2'  # type of regularization used
-default_dout = 0.2  # define the default dropout rate
+default_dout = 0.5  # define the default dropout rate
 use_pre_trained_embeddings = True  # whether to use pre-trained embedding vectors
-pre_trained_embeddings_file = EMBEDDINGS_DIR + GLOVE_6B_100d_EMBEDDINGS  # the location of the pre-trained embeddings
+pre_trained_embeddings_file = EMBEDDINGS_DIR + GLOVE_6B_300d_EMBEDDINGS  # the location of the pre-trained embeddings
 
 
 # residual block
@@ -64,11 +64,11 @@ def classifier(x, num_classes, voca_size, test=False):
         # loop dilated causal conv block
         for i in range(num_blocks):
             res = (res
-                   .sg_res_block(size=3, block=i, rate=1, causal=False, is_first=True)
-                   .sg_res_block(size=3, block=i, rate=2, causal=False)
-                   .sg_res_block(size=3, block=i, rate=4, causal=False)
-                   .sg_res_block(size=3, block=i, rate=8, causal=False)
-                   .sg_res_block(size=3, block=i, rate=16, causal=False))
+                   .sg_res_block(size=8, block=i, rate=1, causal=False, is_first=True)
+                   .sg_res_block(size=8, block=i, rate=2, causal=False)
+                   .sg_res_block(size=8, block=i, rate=4, causal=False)
+                   .sg_res_block(size=5, block=i, rate=8, causal=False)
+                   .sg_res_block(size=5, block=i, rate=16, causal=False))
 
         in_dim = res.get_shape().as_list()[-1]
         res = res.sg_conv1d(size=1, dim=in_dim, dout=dropout, bn=True, regularizer=reg_type, name='conv_dout_final')

@@ -4,7 +4,7 @@ from model.trainer import classifier_train
 
 __author__ = 'georgi.val.stoyan0v@gmail.com'
 
-BATCH_SIZE = 32
+BATCH_SIZE = 64
 
 BUCKETS = [100, 170, 240, 290, 340]
 DATA_FILE = ['data/datasets/kaggle_popcorn_challenge/labeledTrainData.tsv']
@@ -21,13 +21,18 @@ sess = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
 
 # setup embeddings, preload pre-trained embeddings if needed
 emb = None
+embedding_name = 'emb'
+
 if use_pre_trained_embeddings:
     embedding_matrix = data.preload_embeddings(embedding_dim, pre_trained_embeddings_file)
-    emb = init_custom_embeddings(name='emb_x', embeddings_matrix=embedding_matrix)
+    emb = init_custom_embeddings(name=embedding_name, embeddings_matrix=embedding_matrix, trainable=True)
 else:
-    emb = tf.sg_emb(name='emb', voca_size=data.vocabulary_size, dim=embedding_dim)
+    emb = tf.sg_emb(name=embedding_name, voca_size=data.vocabulary_size, dim=embedding_dim)
+
+data.visualize_embeddings(sess, emb, embedding_name)
 
 
+# setup the model for training and validation. Enable multi-GPU support
 @tf.sg_parallel
 def get_train_loss(opt):
     with tf.sg_context(name='model'):
@@ -59,7 +64,8 @@ def get_val_metrics(opt):
 
         return acc, val_loss
 
+
 # train
-classifier_train(sess=sess, log_interval=50, lr=1e-3, loss=get_train_loss(input=x, target=y),
+classifier_train(sess=sess, log_interval=50, lr=1e-3, loss=get_train_loss(input=x, target=y)[0],
                  eval_metric=get_val_metrics(input=val_x, target=val_y)[0],
                  ep_size=data.num_batches, max_ep=10, early_stop=False, data=data)
