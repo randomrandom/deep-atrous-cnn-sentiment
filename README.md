@@ -109,6 +109,9 @@ ible hokum and at times compelling drama .
 1. Put everything into Docker
 1. Create a REST API for an easy deploy as a service
 
+## My other repositories
+1. [Deep-Atrous-CNN-NER](https://github.com/randomrandom/deep-atrous-ner)
+
 ## Citation
 
 If you find this code useful please cite me in your work:
