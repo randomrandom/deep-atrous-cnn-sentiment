@@ -121,4 +121,4 @@ George Stoyanov. Deep-Atrous-CNN-Text-Network. 2017. GitHub repository. https://
 </code></pre>
 
 ## Authors
-George Stoyanov (george@ai.hacker.works) at AiWorks.
+George Stoyanov (georgi.val.stoyan0v@gmail.com)
